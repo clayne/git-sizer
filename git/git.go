@@ -24,6 +24,8 @@ type Repository struct {
 	// gitBin is the path of the `git` executable that should be used
 	// when running commands in this repository.
 	gitBin string
+	// hashAgo is repository hash algo
+	hashAlgo HashAlgo
 }
 
 // smartJoin returns `relPath` if it is an absolute path. If not, it
@@ -49,9 +51,18 @@ func NewRepositoryFromGitDir(gitDir string) (*Repository, error) {
 		)
 	}
 
+	hashAlgo := HashSHA1
+	cmd := exec.Command(gitBin, "--git-dir", gitDir, "rev-parse", "--show-object-format") //nolint:gosec
+	if out, err := cmd.Output(); err == nil {
+		if string(bytes.TrimSpace(out)) == "sha256" {
+			hashAlgo = HashSHA256
+		}
+	}
+
 	repo := Repository{
-		gitDir: gitDir,
-		gitBin: gitBin,
+		gitDir:   gitDir,
+		gitBin:   gitBin,
+		hashAlgo: hashAlgo,
 	}
 
 	full, err := repo.IsFull()
@@ -169,4 +180,16 @@ func (repo *Repository) GitPath(relPath string) (string, error) {
 	// relative to the current directory. Since we haven't changed the
 	// current directory, we can use it as-is:
 	return string(bytes.TrimSpace(out)), nil
+}
+
+func (repo *Repository) HashAlgo() HashAlgo {
+	return repo.hashAlgo
+}
+
+func (repo *Repository) HashSize() int {
+	return repo.hashAlgo.HashSize()
+}
+
+func (repo *Repository) NullOID() OID {
+	return repo.hashAlgo.NullOID()
 }
