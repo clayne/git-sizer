@@ -134,7 +134,7 @@ func ScanRepositoryUsingGraph(
 		case "tree":
 			trees = append(trees, ObjectHeader{obj.OID, obj.ObjectSize})
 		case "commit":
-			commits = append(commits, CommitHeader{ObjectHeader{obj.OID, obj.ObjectSize}, git.NullOID})
+			commits = append(commits, CommitHeader{ObjectHeader{obj.OID, obj.ObjectSize}, repo.NullOID()})
 		case "tag":
 			tags = append(tags, ObjectHeader{obj.OID, obj.ObjectSize})
 		default:
